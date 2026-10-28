@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Happy Birthday, Riya!</title>
+<style>
+:root{--bg1:#ffe3ec;--bg2:#ffd0e0;--ink:#4a1630;--card:#ffffffcc;--accent:#e63e7a;color-scheme:light;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg1:#2a0f3a;--bg2:#4a1546;--ink:#ffe8f1;--card:#ffffff1a;--accent:#ff7aa8;color-scheme:dark}}
+:root[data-theme="dark"]{--bg1:#2a0f3a;--bg2:#4a1546;--ink:#ffe8f1;--card:#ffffff1a;--accent:#ff7aa8;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:linear-gradient(160deg,var(--bg1),var(--bg2));color:var(--ink);font-family:Georgia,"Times New Roman",serif;overflow:hidden;position:relative}
+#top{position:absolute;inset:0 0 auto;text-align:center;padding:14px 12px;z-index:5;pointer-events:none}
+h1{margin:0;font-size:clamp(20px,5vw,34px)}
+#sub{margin:4px 0 0;font-size:15px;opacity:.85}
+#word{display:flex;flex-wrap:wrap;justify-content:center;gap:4px;margin-top:10px}
+.l{width:clamp(18px,4.6vw,30px);height:clamp(26px,6vw,38px);border-bottom:3px solid var(--accent);font-size:clamp(18px,4.6vw,28px);font-weight:bold;color:var(--accent);display:flex;align-items:flex-end;justify-content:center}
+.l.gap{border:0;width:12px}
+.l.pop{animation:in .4s}
+@keyframes in{from{transform:scale(2) rotate(-12deg);opacity:0}to{transform:none;opacity:1}}
+.b{position:absolute;bottom:-90px;width:62px;height:76px;border-radius:50% 50% 48% 48%;cursor:pointer;animation:up linear forwards;z-index:2;border:0;padding:0}
+.b::after{content:"";position:absolute;left:50%;top:100%;width:2px;height:34px;background:var(--ink);opacity:.35}
+.b::before{content:"";position:absolute;left:16%;top:14%;width:16%;height:22%;border-radius:50%;background:#fff8;transform:rotate(25deg)}
+@keyframes up{to{transform:translateY(-120vh)}}
+#msg{position:absolute;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);width:min(92%,460px);text-align:center;background:var(--card);backdrop-filter:blur(6px);border-radius:16px;padding:12px 16px;font-style:italic;z-index:5;opacity:0;transition:opacity .4s}
+#msg.on{opacity:1}
+#fin{position:absolute;inset:0;display:none;align-items:center;justify-content:center;z-index:8;padding:16px;overflow:auto}
+#fin.on{display:flex}
+.card{background:var(--card);backdrop-filter:blur(8px);border-radius:22px;padding:24px 20px;max-width:440px;width:100%;text-align:center;box-shadow:0 10px 40px #0003}
+.card h2{margin:0 0 8px;font-size:clamp(26px,7vw,40px);color:var(--accent)}
+.card p{line-height:1.5;margin:8px 0}
+#frame{width:200px;height:200px;margin:12px auto;border-radius:50%;border:5px solid var(--accent);background:#fff3 center/cover;display:flex;align-items:center;justify-content:center;font-size:56px}
+button.btn,label.btn{display:inline-block;background:var(--accent);color:#fff;border:0;border-radius:999px;padding:10px 18px;font:inherit;cursor:pointer;margin:4px}
+canvas{position:absolute;inset:0;pointer-events:none;z-index:9}
+#start{position:absolute;inset:0;z-index:7;display:flex;align-items:center;justify-content:center;padding:16px}
+</style>
+</head>
+<body>
+<div id="top">
+  <h1>🎈 Pop the balloons, Riya! 🎈</h1>
+  <p id="sub">Every pop reveals a letter… and a little wish.</p>
+  <div id="word"></div>
+</div>
+<div id="msg"></div>
+<div id="start"><div class="card"><h2>Hey Riya 💖</h2><p>Someone made a tiny game just for you. Pop the balloons and see what you spell out.</p><button class="btn" id="go">Let’s play</button></div></div>
+<div id="fin"><div class="card">
+  <h2>Happy Birthday, Riya! 🎂</h2>
+  <div id="frame">🎁</div>
+  <p id="note">You make every day brighter just by being you. Here’s to a year full of laughter, love, and all your wishes coming true.</p>
+  <label class="btn">📷 Add a photo<input id="pic" type="file" accept="image/*" hidden></label>
+  <button class="btn" id="again">Play again</button>
+</div></div>
+<canvas id="cv"></canvas>
+<script>
+(function(){
+var TEXT="HAPPY BIRTHDAY RIYA";
+var wishes=["You light up every room you walk into ✨","Your smile is my favorite thing ☀️","May this year be your best one yet 🌸","You deserve all the cake. All of it. 🍰","Thank you for being you 💛","Here’s to new adventures together 🌍","One more year of being amazing 🌟"];
+var colors=["#ff5c8a","#ffb703","#8ecae6","#b388ff","#52d6a1","#ff8a5c"];
+var word=document.getElementById("word"),msg=document.getElementById("msg"),fin=document.getElementById("fin");
+var idx=0,timer=null,running=false,wi=0,mt;
+function build(){word.innerHTML="";TEXT.split("").forEach(function(c){var d=document.createElement("div");d.className="l"+(c===" "?" gap":"");word.appendChild(d)})}
+function say(t){msg.textContent=t;msg.classList.add("on");clearTimeout(mt);mt=setTimeout(function(){msg.classList.remove("on")},2600)}
+function spawn(){
+  var b=document.createElement("button");b.className="b";b.setAttribute("aria-label","balloon");
+  b.style.left=(Math.random()*(innerWidth-70))+"px";
+  b.style.background=colors[Math.floor(Math.random()*colors.length)];
+  b.style.animationDuration=(6+Math.random()*4)+"s";
+  b.onclick=function(){pop(b)};
+  b.addEventListener("animationend",function(){b.remove()});
+  document.body.appendChild(b);
+}
+function pop(b){
+  if(!running)return;
+  var r=b.getBoundingClientRect();burst(r.left+31,r.top+38,14,b.style.background);b.remove();
+  while(TEXT[idx]===" ")idx++;
+  var slot=word.children[idx];slot.textContent=TEXT[idx];slot.classList.add("pop");
+  idx++;
+  if(idx%3===0)say(wishes[wi++%wishes.length]);
+  while(idx<TEXT.length&&TEXT[idx]===" ")idx++;
+  if(idx>=TEXT.length)finish();
+}
+function finish(){
+  running=false;clearInterval(timer);
+  document.querySelectorAll(".b").forEach(function(b){b.remove()});
+  setTimeout(function(){fin.classList.add("on");for(var i=0;i<8;i++)setTimeout(function(){burst(Math.random()*innerWidth,Math.random()*innerHeight*.6,40)},i*250)},500);
+}
+function start(){
+  document.getElementById("start").style.display="none";fin.classList.remove("on");
+  build();idx=0;running=true;spawn();timer=setInterval(spawn,750);
+}
+document.getElementById("go").onclick=start;
+document.getElementById("again").onclick=start;
+document.getElementById("pic").onchange=function(e){
+  var f=e.target.files[0];if(!f)return;var rd=new FileReader();
+  rd.onload=function(){var fr=document.getElementById("frame");fr.textContent="";fr.style.backgroundImage="url("+rd.result+")"};
+  rd.readAsDataURL(f);
+};
+/* confetti */
+var cv=document.getElementById("cv"),cx=cv.getContext("2d"),P=[];
+function size(){cv.width=innerWidth;cv.height=innerHeight}size();addEventListener("resize",size);
+function burst(x,y,n,col){for(var i=0;i<n;i++){var a=Math.random()*6.28,s=2+Math.random()*6;P.push({x:x,y:y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-2,l:60+Math.random()*40,c:col||colors[Math.floor(Math.random()*colors.length)],r:3+Math.random()*4})}}
+function tick(){cx.clearRect(0,0,cv.width,cv.height);
+  P=P.filter(function(p){return p.l>0});
+  P.forEach(function(p){p.x+=p.vx;p.y+=p.vy;p.vy+=.18;p.l--;cx.globalAlpha=Math.min(1,p.l/30);cx.fillStyle=p.c;cx.fillRect(p.x,p.y,p.r,p.r*1.6)});
+  requestAnimationFrame(tick)}
+tick();build();
+})();
+</script>
+</body>
+</html>
